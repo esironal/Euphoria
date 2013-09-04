@@ -1,0 +1,97 @@
+
+html, body {	
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	padding: 0;
+	min-height: 300px;
+	font-family: arial;
+}
+
+.login-dialog-layer {
+	width: 100%;	
+	height: 100%;
+	background: url("../img/backgrounds/login.png") no-repeat;
+	background-size: cover;
+}
+
+.login-dialog-container {
+	position: absolute;
+	width: 400px;
+	height: 300px;	
+	margin-top: -150px;
+	top: 40%;	
+	margin-left: -200px;
+	left: 50%;	
+	border-radius: 15px;
+	box-shadow: 0px 0px 15px #000;
+	overflow: hidden;	
+}
+
+.login-dialog-background {
+	width: 100%;
+	height: 100%;
+	background: #fff;
+	opacity: 0.8;
+	position: absolute;	
+}
+
+.login-dialog-container h1 {
+	display: inline-block;
+	margin-left: 40px;
+	position: relative;
+}
+
+.login-dialog-container span {
+	display: inline-block;
+	float: right;
+	margin-right: 40px;
+	font-size: 10px;
+	color: #5a5a5a;
+	position: relative;
+}
+
+.login-dialog-container form {
+	display: block;	
+	margin-left: 40px;
+	position: relative;
+}
+
+.login-dialog-container form * {
+	display: block;
+	margin-bottom: 10px;
+}
+
+.login-dialog-container input {
+	padding-left: 5px;
+	padding-right: 5px;
+	line-height: 24px;
+	height: 24px;
+	width: 300px;
+	margin-bottom: 15px;
+	background: #fff;
+	border: 1px solid #48f;
+	border-radius: 4px;
+}
+
+.login-dialog-container input:focus {
+	border-color: #48f;
+	box-shadow: 0px 0px 5px #48f;
+}
+
+.login-dialog-container button {
+	color: #fff;
+	font-weight: bold;
+	border: 1px solid #48f;
+	border-radius: 4px;
+	line-height: 20px;
+	height: 30px;
+	vertical-align: middle;
+	background: #48f;
+	margin-bottom: 25px;
+	cursor: pointer;	
+}
+
+.login-dialog-container button:active {
+	background: #248;
+}
