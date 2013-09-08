@@ -9,13 +9,14 @@ html, body {
 }
 
 .login-dialog-layer {
+	display: block;
 	width: 100%;	
 	height: 100%;
 	background: url("../img/backgrounds/login.png") no-repeat;
 	background-size: cover;
 }
 
-.login-dialog-container {
+.login-dialog-container {	
 	position: absolute;
 	width: 400px;
 	height: 300px;	
@@ -34,6 +35,7 @@ html, body {
 	background: #fff;
 	opacity: 0.8;
 	position: absolute;	
+	
 }
 
 .login-dialog-container h1 {
@@ -55,6 +57,7 @@ html, body {
 	display: block;	
 	margin-left: 40px;
 	position: relative;
+	zoom: 1;
 }
 
 .login-dialog-container form * {
@@ -72,6 +75,7 @@ html, body {
 	background: #fff;
 	border: 1px solid #48f;
 	border-radius: 4px;
+	color: #888;
 }
 
 .login-dialog-container input:focus {
@@ -94,4 +98,10 @@ html, body {
 
 .login-dialog-container button:active {
 	background: #248;
+}
+
+.layer-loading .login-dialog-container form {
+	opacity: 0;
+	transition: all 1000ms ease;
+	
 }

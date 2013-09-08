@@ -1,13 +1,13 @@
 Object.prototype.extend = function(value) {
 	if ("object" == typeof(value)) {
-		for (key in value) {
-			if ("u	ndefined" == typeof(this[key])) {
+		for (var key in value) {
+			if ("undefined" === typeof(this[key])) {
 				this[key] = value[key];
 				continue;
 			}
 			if (this[key] === value[key]) 
 				continue;
-			if ("object" == typeof(value[key]) && "object" == typeof(this[key])) {
+			if ("object" === typeof(value[key]) && "object" == typeof(this[key])) {
 				this[key].extend(value[key]);
 				continue;
 			}
@@ -24,6 +24,10 @@ E = {
 		ajaxTimeout: 30 //seconds
 	},	
 	runtime: {},
+	
+	include: function(src, onLoad, onError) {
+		//TODO
+	},
 
 // helpers		
 	createScopeFunction: function(func, scope) {
@@ -33,13 +37,13 @@ E = {
 	},
 	
 	log: function(value) {
-		if ("undefined" != typeof(console) && "function" == typeof(console.log))
+		if ("undefined" !== typeof(console) && "function" === typeof(console.log))
 			console.log(value);	
 	},
 
 // ajax
 	ajaxSubmit: function(formId, config) {
-		var formElement = document.getElementById(formId);
+		var formElement = document.getElementById(formId);		
 		if (null != formElement) {
 			var requestData = { ajax: true };
 			
@@ -50,7 +54,7 @@ E = {
    				requestData[fieldName] = fieldValue;
 			}			
 			
-			E.ajax({
+			var ajaxConf = {
 				url: formElement.action,
 				data: requestData,
 				onSuccess: function() {		
@@ -93,20 +97,28 @@ E = {
 					}
 				},
 				onError: function() {
+					//TODO
 					E.log(this);
 				},
 				onTimeout: function() {
+					//TODO
 					E.log(this);
 				},
 				// function scope data
 				form: formElement
-			});
+			};
+			
+			if ("object" === typeof(config))
+				ajaxConf.extend(config);
+			
+			E.ajax(ajaxConf);
+			
 		} else {
 			throw new Error("E.ajaxSubmit(): Unknown form id: " + formId);
 		}
 	},
 	
-	ajax: function(config) {
+	ajax: function(config) {		
 		var transport = (window.ActiveXObject) ? new ActiveXObject('Microsoft.XMLHTTP') 
 			: (window.XMLHttpRequest) ? new XMLHttpRequest() : false;
 			
@@ -116,9 +128,9 @@ E = {
 				clearTimeout(this.timer_id);
 				
 				var handler = this.config.onSuccess;
-				if (400 <= this.request.status < 500 && "undefined" != typeof(this.config.onFailure))
+				if (400 <= this.request.status && 500 > this.request.status && "undefined" !== typeof(this.config.onFailure))
 					handler = this.config.onFailure;
-				if (500 <= this.request.status && "undefined" != typeof(this.config.onError))
+				if (500 <= this.request.status && "undefined" !== typeof(this.config.onError))
 					handler = this.config.onError;					
 					
 				handler.apply(this);	
@@ -135,9 +147,9 @@ E = {
 		var timeoutHandler = function() {
 			this.request.abort();
 			var handler = null;
-			if ("undefined" != typeof(this.config.onTimeout))
+			if ("undefined" !== typeof(this.config.onTimeout))
 				handler = this.config.onTimeout;
-			if ("undefined" != typpeof(this.config.onError))
+			if ("undefined" !== typpeof(this.config.onError))
 				handler = this.config.onError;
 								
 			if (null != handler)
@@ -145,7 +157,7 @@ E = {
 		};
 		var encoded_data = "";
 		
-        if (typeof config.data === "string") {
+        if ("string" === typeof(config.data) ) {
             encoded_data = data;
         } else {
             var e = encodeURIComponent;
@@ -170,29 +182,32 @@ E = {
 	},
 	
 	elementFactory: function(config) {
-		if("object" != typeof(config) || "undefined" == typeof(config.tag))
+		if("object" !== typeof(config) || "undefined" === typeof(config.tag))
 			throw new Error("E.elementFactory() - invalid config.");
 		
 		var element = document.createElement(config.tag);
 		
-		if("undefined" != typeof(config.id)) 
+		if("undefined" !== typeof(config.id)) 
 			element.id = config.id;
 			
-		if("undefined" != typeof(config.cls))
+		if("undefined" !== typeof(config.cls))
 			element.className = config.cls;
 		
-		if("undefined" != typeof(config.html))
+		if("undefined" !== typeof(config.html))
 			element.innerHTML = config.html;
 		
-		if("object" == typeof(config.attributes)) 
+		if("object" === typeof(config.attributes)) 
 			for(key in config.attributes) {
 				element[key] = config.attributes[key];				
 			}
 			
-		if("object" == typeof(config.events))
+		if("object" === typeof(config.events))
 			for(key in config.events) {
 				element[key] = config.events[key];
 			}
+			
+		if("object" === typeof(config.style))
+			element.style.extend(config.style);
 		
 		if("undefined" != typeof(config.childs)) 
 			for(var i=0; i<config.childs.length; i++) {
