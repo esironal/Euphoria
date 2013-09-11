@@ -26,6 +26,10 @@ E = {
 	runtime: {},
 	
 	include: function(src, onLoad, onError) {
+		var loadScript = document.createElement("SCRIPT");
+		loadScript.src = src;
+		
+		document.appendChild(loadScript);
 		//TODO
 	},
 
