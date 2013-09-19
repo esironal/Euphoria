@@ -24,18 +24,50 @@ E = {
 		ajaxTimeout: 30 //seconds
 	},	
 	runtime: {},
-	
+
+// helpers		
 	include: function(src, onLoad, onError) {
 		var loadScript = document.createElement("SCRIPT");
 		loadScript.src = src;
 		
-		document.appendChild(loadScript);
-		//TODO
+		loadScript.onload = onLoad;
+		loadScript.onerror = onError;
+		
+		document.head.appendChild(loadScript);
 	},
-
-// helpers		
+	includeList: function(list, onLoad, onError) {
+		var processScope = {
+			progress: 0,
+			needFiles: list.length,
+			hasError: false,
+			onload: onLoad,
+			onerror: onError
+		};
+		
+		for(var i = 0; i < list.length; i++) {
+			this.include(
+				list[i], 
+				this.createScopeFunction(function(){					
+					this.progress++;
+					if(this.progress>=this.needFiles) {
+						if (this.hasError) {
+							this.onerror();
+						} else {
+							this.onload();
+						}
+					}
+				}, processScope), 
+				this.createScopeFunction(function(){					
+					this.hasError = true;
+					this.progress++;
+					if(this.progress>=this.needFiles) 
+						this.onerror();
+				}, processScope));
+		}
+	},
 	createScopeFunction: function(func, scope) {
 		return function() {
+			scope.origin = this;
 			return func.apply(scope);
 		};
 	},
@@ -44,8 +76,106 @@ E = {
 		if ("undefined" !== typeof(console) && "function" === typeof(console.log))
 			console.log(value);	
 	},
-
+	
+// document
+	appendStyleSheet: function(url) {
+		var styleLinkElement = document.createElement("LINK");
+		styleLinkElement.rel = "stylesheet";
+		styleLinkElement.href = url;
+		
+		document.head.appendChild(styleLinkElement);
+	},
+	
+	elementFactory: function(config) {
+		if("object" !== typeof(config) || "undefined" === typeof(config.tag))
+			throw new Error("E.elementFactory() - invalid config.");
+		
+		var element = document.createElement(config.tag);
+		
+		if("undefined" !== typeof(config.id)) 
+			element.id = config.id;
+			
+		if("undefined" !== typeof(config.cls))
+			element.className = config.cls;
+		
+		if("undefined" !== typeof(config.html))
+			element.innerHTML = config.html;
+		
+		if("object" === typeof(config.attributes)) 
+			for(key in config.attributes) {
+				element[key] = config.attributes[key];				
+			}
+			
+		if("object" === typeof(config.events))
+			for(key in config.events) {
+				element[key] = config.events[key];
+			}
+			
+		if("object" === typeof(config.style))
+			element.style.extend(config.style);
+		
+		if("undefined" != typeof(config.childs)) 
+			for(var i=0; i<config.childs.length; i++) {
+				element.appendChild(this.elementFactory(config.childs[i]));
+			}
+		
+		return element;
+	},
+	
 // ajax
+	ajax: function(config) {		
+		var transport = (window.ActiveXObject) ? new ActiveXObject('Microsoft.XMLHTTP') 
+			: (window.XMLHttpRequest) ? new XMLHttpRequest() : false;
+			
+		var stateScope = {request: transport, config: config, timer_id: null };	
+		var readyStateHandler = function(){
+			if (4 == this.request.readyState) {
+				clearTimeout(this.timer_id);
+				
+				var handler = this.config.onSuccess;
+				if (400 <= this.request.status && 500 > this.request.status && "undefined" !== typeof(this.config.onFailure))
+					handler = this.config.onFailure;
+				if (500 <= this.request.status && "undefined" !== typeof(this.config.onError))
+					handler = this.config.onError;					
+					
+				handler.apply(this);	
+			}	
+		};
+		
+		transport.onreadystatechange = E.createScopeFunction(readyStateHandler, stateScope);
+		
+		transport.open('POST', config.url, true);
+		transport.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        transport.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        transport.setRequestHeader('Connection', 'close');
+		
+		var timeoutHandler = function() {
+			this.request.abort();
+			var handler = null;
+			if ("undefined" !== typeof(this.config.onTimeout))
+				handler = this.config.onTimeout;
+			if ("undefined" !== typpeof(this.config.onError))
+				handler = this.config.onError;
+								
+			if (null != handler)
+				handler.call.apply(this); 					
+		};
+		var encoded_data = "";
+		
+        if ("string" === typeof(config.data) ) {
+            encoded_data = data;
+        } else {
+            var e = encodeURIComponent;
+            for (var k in config.data) {
+                if (config.data.hasOwnProperty(k)) {
+                    encoded_data += '&' + e(k) + '=' + e(config.data[k]);
+                }
+            }
+        }
+		
+		stateScope.timer_id = setTimeout(E.createScopeFunction(timeoutHandler, stateScope), E.config.ajaxTimeout * 1000);
+		transport.send(encoded_data);		
+	},
 	ajaxSubmit: function(formId, config) {
 		var formElement = document.getElementById(formId);		
 		if (null != formElement) {
@@ -120,105 +250,6 @@ E = {
 		} else {
 			throw new Error("E.ajaxSubmit(): Unknown form id: " + formId);
 		}
-	},
-	
-	ajax: function(config) {		
-		var transport = (window.ActiveXObject) ? new ActiveXObject('Microsoft.XMLHTTP') 
-			: (window.XMLHttpRequest) ? new XMLHttpRequest() : false;
-			
-		var stateScope = {request: transport, config: config, timer_id: null };	
-		var readyStateHandler = function(){
-			if (4 == this.request.readyState) {
-				clearTimeout(this.timer_id);
-				
-				var handler = this.config.onSuccess;
-				if (400 <= this.request.status && 500 > this.request.status && "undefined" !== typeof(this.config.onFailure))
-					handler = this.config.onFailure;
-				if (500 <= this.request.status && "undefined" !== typeof(this.config.onError))
-					handler = this.config.onError;					
-					
-				handler.apply(this);	
-			}	
-		};
-		
-		transport.onreadystatechange = E.createScopeFunction(readyStateHandler, stateScope);
-		
-		transport.open('POST', config.url, true);
-		transport.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-        transport.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-        transport.setRequestHeader('Connection', 'close');
-		
-		var timeoutHandler = function() {
-			this.request.abort();
-			var handler = null;
-			if ("undefined" !== typeof(this.config.onTimeout))
-				handler = this.config.onTimeout;
-			if ("undefined" !== typpeof(this.config.onError))
-				handler = this.config.onError;
-								
-			if (null != handler)
-				handler.call.apply(this); 					
-		};
-		var encoded_data = "";
-		
-        if ("string" === typeof(config.data) ) {
-            encoded_data = data;
-        } else {
-            var e = encodeURIComponent;
-            for (var k in config.data) {
-                if (config.data.hasOwnProperty(k)) {
-                    encoded_data += '&' + e(k) + '=' + e(config.data[k]);
-                }
-            }
-        }
-		
-		stateScope.timer_id = setTimeout(E.createScopeFunction(timeoutHandler, stateScope), E.config.ajaxTimeout * 1000);
-		transport.send(encoded_data);		
-	},
-	
-// document
-	appendStyleSheet: function(url) {
-		var styleLinkElement = document.createElement("LINK");
-		styleLinkElement.rel = "stylesheet";
-		styleLinkElement.href = url;
-		
-		document.head.appendChild(styleLinkElement);
-	},
-	
-	elementFactory: function(config) {
-		if("object" !== typeof(config) || "undefined" === typeof(config.tag))
-			throw new Error("E.elementFactory() - invalid config.");
-		
-		var element = document.createElement(config.tag);
-		
-		if("undefined" !== typeof(config.id)) 
-			element.id = config.id;
-			
-		if("undefined" !== typeof(config.cls))
-			element.className = config.cls;
-		
-		if("undefined" !== typeof(config.html))
-			element.innerHTML = config.html;
-		
-		if("object" === typeof(config.attributes)) 
-			for(key in config.attributes) {
-				element[key] = config.attributes[key];				
-			}
-			
-		if("object" === typeof(config.events))
-			for(key in config.events) {
-				element[key] = config.events[key];
-			}
-			
-		if("object" === typeof(config.style))
-			element.style.extend(config.style);
-		
-		if("undefined" != typeof(config.childs)) 
-			for(var i=0; i<config.childs.length; i++) {
-				element.appendChild(this.elementFactory(config.childs[i]));
-			}
-		
-		return element;
 	},
 	
 // i18n

@@ -15,10 +15,10 @@ E.wde = {
 			E.ajax({
 				url: E.config.wde.controller.replace(":action","environment"),
 				onSuccess: function() {
-					answer = JSON.parse(this.request.responseText);
+					var answer = JSON.parse(this.request.responseText);
 					if ("success" == answer.status) {						
 						E.config.wde.env = answer.env;
-						E.wde.initDesktopLayer();
+						E.wde.initDesktopLayers();
 						E.wde.loginDialog.hide();						
 					} else {
 						if (null === E.wde.loginDialog.layer)
@@ -34,31 +34,65 @@ E.wde = {
 		
 		}
 	},
-	initDesktopLayer: function() {
-		if ("wde" === document.body.id) 
-			this.setupWallpaper();
+	initDesktopLayers: function() {
+		E.appendStyleSheet(E.config.wde.env.theme);
 		
+		E.includeList([
+			E.config.wde.root + "/wallpaper.js",
+			E.config.wde.root + "/windows.js",
+			E.config.wde.root + "/widgets.js",
+			E.config.wde.root + "/panel.js",
+			E.config.wde.root + "/dialogs.js"
+		], function(){
+			E.wde.wallpaper.applySettings();
+			E.wde.windows.layer.show();
+			E.wde.panel.layer.show();
+			//TODO
+		}, function() {
+			E.wde.alert("Euphoria Critical Error", "Can't load system javascript files", E.wde.msgBox.status.error);
+		});		
 	},
-	setupWallpaper: function() {
-		switch(E.config.wde.env.wallpaper.type) {
-			case "image": {
-				document.body.style.extend({
-					backgroundImage: "url(" + E.config.wde.env.wallpaper.url + ")",
-					backgroundSize: "cover",
-					backgroundRepeat: "no-repeat"
-				});
-				break;
+	createLayer: function(config) {
+		var layer = E.elementFactory({
+			tag: "div",
+			id: config.id,
+			cls: config.cls,
+			style: {
+				zIndex: config.zIndex,
+				position: "absolute",
+				top: "0px",
+				left: "0px",
+				overflow: "visible",
+				display: "none"				
 			}
-			default:
-		}
+		});
 		
-	},
-	
-	alert: function(title, message, status) {
-		// TODO alert msgbox
-		alert(message);
+		if (config.fullscreen)
+			layer.style.extend({
+				width: "100%",
+				height: "100%"
+			});
+		else
+			layer.style.extend({
+				width: "0px",
+				height: "0px"
+			});
+			
+		layer.extend({
+			show: function() {
+				this.style.display = "block";
+			},
+			hide: function() {
+				this.style.display = "none";
+			}
+		});
+		
+		document.body.appendChild(layer);
+		
+		return layer;
 	},
 // message box module	
+// TODO need refactoring in obedience to layers conception
 	msgBox: {
 		status: {
 			error: -1,
@@ -67,7 +101,12 @@ E.wde = {
 			info: 2
 		}
 	},
+	alert: function(title, message, status) {
+		// TODO alert msgbox
+		alert(message);
+	},
 // login dialog module
+// TODO need refactoring in obedience to layers conception
 	loginDialog: {
 		layer: null,
 		init: function() {
