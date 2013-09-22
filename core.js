@@ -18,7 +18,6 @@ Object.prototype.extend = function(value) {
 	}
 };
 
-
 E = {
 	config: {
 		ajaxTimeout: 30 //seconds
@@ -68,8 +67,49 @@ E = {
 	createScopeFunction: function(func, scope) {
 		return function() {
 			scope.origin = this;
+			scope.arguments = arguments;
 			return func.apply(scope);
 		};
+	},
+	
+	connect: function(obj, signalName, slot) {
+		if ("object" != typeof(obj))
+			throw new Error ("Argument 'obj' must be an object!");
+		
+		if ("string" != typeof(signalName))
+			throw new Error ("Argument 'signalName must be a string!");
+			
+		if ("function" != typeof(slot))
+			throw new Error ("Argument 'slot' must be a function!");
+			
+		if (!obj.isEventServer)
+			obj.extend(E.behaviors.eventServer);
+		console.log(this);
+		obj[signalName] = E.createScopeFunction(E.behaviors.eventServer.emit, { signal: signalName, object: obj });	
+		
+		if (!obj.listeners[signalName])
+			obj.listeners[signalName] = [];
+			
+		if (-1 == obj.listeners[signalName].indexOf(slot))
+			obj.listeners[signalName].push(slot);
+	},
+	
+	disconnect: function(obj, signalName, slot) {
+		if ("object" != typeof(obj))
+			throw new Error ("Argument 'obj' must be an object!");
+		
+		if ("string" != typeof(signalName))
+			throw new Error ("Argument 'signal must be a string!");
+			
+		if ("function" != typeof(slot))
+			throw new Error ("Argument 'slot' must be a function!");
+			
+		if (obj.isEventServer) {
+			var index =  obj.listeners[signalName].indexOf(slot);
+			if (-1 < index) {
+				delete obj.listeners[signalName][index];
+			} 
+		}
 	},
 	
 	log: function(value) {
@@ -262,4 +302,22 @@ E = {
 	appendDictionary: function(dict) {
 		//TODO
 	}
+};
+
+E.behaviors = {
+	eventServer: {
+		isEventServer: true,
+		listeners: {},
+		emit: function() {
+			if ("string" != typeof(this.signal))
+				throw new Error("E.behaviors.eventServer,emit(): unknown signal, please use E.connect() method!");
+			
+			var listeners = this.object.listeners[this.signal];
+			if (listeners) {
+				for (var i=0, l = listeners.length; i < l; i++) {
+					listeners[i].apply(this, this.arguments);
+				}
+			}
+		}
+	}	
 };

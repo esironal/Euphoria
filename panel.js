@@ -20,6 +20,8 @@ E.wde.panel = {
 				}
 			});
 			
+			E.connect(window, "onresize", this.hint);
+			
 			this.layer.appendChild(this.body);
 			
 			this.hint();
@@ -27,9 +29,10 @@ E.wde.panel = {
 	},
 	hint: function() {
 		var config = E.config.wde.env.panel;
+		var panel = E.wde.panel;
 		switch (config.orientation) {
 			case "left":
-				this.body.style.extend({
+				panel.body.style.extend({
 					top: "0px",
 					left: "0px",
 					width: config.size + "px",
@@ -37,7 +40,7 @@ E.wde.panel = {
 				});
 				break;
 			case "right":				
-				this.body.style.extend({
+				panel.body.style.extend({
 					top: "0px",
 					left: String(document.body.clientWidth - config.size) + "px",
 					width: config.size + "px",
@@ -45,7 +48,7 @@ E.wde.panel = {
 				});
 				break;
 			case "top":
-				this.body.style.extend({
+				panel.body.style.extend({
 					top: "0px",
 					left: "0px",
 					width: document.body.clientWidth + "px",
@@ -53,7 +56,7 @@ E.wde.panel = {
 				});			
 				break;
 			case "bottom":
-				this.body.style.extend({
+				panel.body.style.extend({
 					top: (document.body.clientHeight - config.size) + "px",
 					left: "0px",
 					width: document.body.clientWidth + "px",
