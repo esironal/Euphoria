@@ -1,3 +1,39 @@
-#panel-layer > div {
-	background: #ccc;
+#panel-layer > div.left > div.widget-background {
+	background: linear-gradient(to right, #6d6d6d 0%, #333333 100%);
+	box-shadow: inset #6d6d6d -1px 0 0 0px;
+}
+
+#panel-layer > div.right > div.panel-background {
+	background: linear-gradient(to left, #aaaaaa 0%, #888888 100%);
+	box-shadow: inset #aaaaaa 1px 0 0 0px;
+}
+
+#panel-layer > div.top > div.panel-background {
+	background: linear-gradient(to bottom, #aaaaaa 0%, #888888 100%);
+	box-shadow: inset #aaaaaa 0 -1px 0 0px;
+}
+
+#panel-layer > div.bottom > div.panel-background {
+	background: linear-gradient(to top, #aaaaaa 0%, #888888 100%);
+	box-shadow: inset #aaaaaa 0 1px 0 0px;
+}
+
+.main-button {
+	position: relative;
+	margin: 12px;
+	background: url("img/mainButton.png") no-repeat;
+	
+	/* temp solution */
+	width: 40px;
+	height: 40px;
+	/* ... */ 
+}
+
+.main-button .hover {	
+	background: url("img/mainButton-hover.png") no-repeat;	
+	opacity: 0;
+	transition: all 1000ms ease;	 
+}
+.main-button .hover:HOVER {
+	opacity: 1;
 }

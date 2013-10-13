@@ -2,32 +2,49 @@ E.wde.panel = {
 	layer: null,
 	body: null,
 	init: function() {
-		var config = E.config.wde.env.panel;
+		var config = E.config.wde.env.panel;		
 		if (null === this.layer) {
 			this.layer = E.wde.createLayer({
 				id: 'panel-layer',
 				zIndex: 70000,
 				fullscreen: false 				 
-			}); 
-			
+			});			
 			this.body = E.elementFactory({
 				tag: "div",
-				cls: config.orientation + ("left" === config.orientation || "right" === config.orientation) 
-					? "vertical" : "horizontal",
+				cls: config.orientation + " " + (("left" === config.orientation || "right" === config.orientation) 
+					? "vertical" : "horizontal"),
 				style: {
 					display: "block",
-					position: "absolute"			
-				}
-			});
+					position: "absolute"
+				}							
+			});	
 			
-			E.connect(window, "onresize", this.hint);
+			this.body.mix(E.behaviors.ui.widget);
+			this.body.setBackgroundOpacity(config.opacity);		
+			
+			for(var controlName in this.controls) {
+				if (this.controls.hasOwnProperty(controlName)) {
+					var control = this.controls[controlName];
+					console.log(controlName, control);				
+					this.body.appendChild(control);
+					
+					if ("function" === typeof(control["init"]))
+						control.init();
+				}
+			}
+			
+			this.body.extend(E.behaviors.ui.layout);
+			this.body.initLayout(E.behaviors.ui.layout.layoutStrategy[
+				("left" === config.orientation || "right" === config.orientation) ? "VBoxLayout" : "HBoxLayout"]);
+			
+			
+			E.connect(window, "onresize", this.resize);
 			
 			this.layer.appendChild(this.body);
-			
-			this.hint();
+			this.resize();
 		}	
 	},
-	hint: function() {
+	resize: function() {
 		var config = E.config.wde.env.panel;
 		var panel = E.wde.panel;
 		switch (config.orientation) {
@@ -66,6 +83,32 @@ E.wde.panel = {
 			default:
 				throw new Error("Invalid panel orientation in environment configuration!");
 		}
+	},	
+	controls: {
+		mainButton: E.elementFactory({
+			tag: 'div',
+			cls: 'main-button',
+			attributes: {
+				sizePolisy: "minimum"
+			}
+		}).mix(E.behaviors.ui.button.generate({
+			constructors: [ 
+				function() {
+					E.connect(this, "onclick", function() {
+						alert('TODO!!!');
+					});
+				}
+			]
+		})),
+		appInspector: document.createElement('DIV').extend(E.behaviors.ui.widget.generate({
+			//TODO
+		})),
+		systemTray: document.createElement('DIV').extend(E.behaviors.ui.widget.generate({
+			//TODO
+		})),
+		clock: document.createElement('DIV').extend(E.behaviors.ui.widget.generate({
+			//TODO
+		})),
 	}
 };
 

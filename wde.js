@@ -7,7 +7,7 @@ E.wde = {
 		
 		E.appendStyleSheet(E.config.wde.root + "/css/login.css");
 			
-		this.initEnvironment();
+		E.include(E.config.wde.root + "/ui.js", this.initEnvironment);
 	},
 	
 	initEnvironment: function() {		
@@ -62,6 +62,8 @@ E.wde = {
 				position: "absolute",
 				top: "0px",
 				left: "0px",
+				minWidth: "400px",
+				minHeight: "300px",
 				overflow: "visible",
 				display: "none"				
 			}

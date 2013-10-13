@@ -1,21 +1,67 @@
 Object.prototype.extend = function(value) {
-	if ("object" == typeof(value)) {
+	if ("object" === typeof(value)) {
+		//console.log("Start extending object", this);
+		
 		for (var key in value) {
-			if ("undefined" === typeof(this[key])) {
+			if(!value.hasOwnProperty(key))
+				continue;
+				
+			//console.log("Start process key");
+			var typeOfThisKey = typeof(this[key]);
+			var typeOfValueKey = typeof(value[key]);
+			
+			//console.log(key, typeOfThisKey, typeOfValueKey, value[key]);
+			if ("undefined" === typeOfThisKey) {
 				this[key] = value[key];
 				continue;
 			}
 			if (this[key] === value[key]) 
 				continue;
-			if ("object" === typeof(value[key]) && "object" == typeof(this[key])) {
-				this[key].extend(value[key]);
+			//console.log(value[key] instanceof Array, this[key] instanceof Array);					
+			if (value[key] instanceof Array && this[key] instanceof Array) {
+				//console.log("extend array:");
+				//console.log(this[key], value[key]);
+				//console.log("result:");		
+				this[key] = this[key].concat(value[key]);
+				//console.log(this[key]);
 				continue;
 			}
+			if ("object" === typeOfValueKey && "object" == typeOfThisKey) {
+				this[key].extend(value[key]);
+				continue;
+			}	
+					
+			
 			this[key] = value[key];			
-		}	
+		}
+		//console.log("");
 	} else {
 		throw new Error("Object.prototype.extend() : argument must be an object!");
 	}
+	
+	return this;
+};
+
+// experemintal!
+Object.prototype.mix = function(value) {
+	this.extend(value);	
+	if("undefined" !== typeof(this["constructors"]) && this["constructors"] instanceof Array) {
+		E.log(this);
+		for (var i = 0, l = this.constructors.length; i < l; i++) {
+			if ("function" === typeof(this.constructors[i]))
+				this.constructors[i].call(this);
+		}
+		
+		this.constructos = [];
+	}
+	
+	return this;
+};
+
+Object.prototype.generate = function(value) {
+	var retObject = new this.constructor();
+	retObject.extend(this);
+	return retObject.extend(value);
 };
 
 E = {
@@ -24,7 +70,15 @@ E = {
 	},	
 	runtime: {},
 
-// helpers		
+// helpers	
+
+/**
+ * Метод для підключення скрипта
+ * @param {String} src       - адреса файлу скрипта
+ * @param {Function} onLoad  - обробник після успішного завантаження
+ * @param {Function} onError - обробник при помилці
+ */
+	
 	include: function(src, onLoad, onError) {
 		var loadScript = document.createElement("SCRIPT");
 		loadScript.src = src;
@@ -42,7 +96,7 @@ E = {
 			onload: onLoad,
 			onerror: onError
 		};
-		
+		// TODO need progress ?
 		for(var i = 0; i < list.length; i++) {
 			this.include(
 				list[i], 
@@ -64,6 +118,19 @@ E = {
 				}, processScope));
 		}
 	},
+	
+/**
+ * Повертає функцію із замкненим на ній скопом (локальний обєкт видимості).
+ * Це дозволяй привязати this який буде доступний незалежно від способу виклику функції.
+ * В функцію func автоматом прокидається два додаткових атрибута які доступні при виклику:
+ * this.origin - оригінальний скоп обєкта та this.arguments що прокидає аргументи функції для func.
+ * Увага! виклик функції стане дорогим по часу виконання.
+ * 
+ * @param {Function} func - функція якій імплантується this 
+ * @param {Object} scope  - обєкт this для func
+ * 
+ * @return {Function} функція якй буде привязаний this
+ */
 	createScopeFunction: function(func, scope) {
 		return function() {
 			scope.origin = this;
@@ -84,7 +151,7 @@ E = {
 			
 		if (!obj.isEventServer)
 			obj.extend(E.behaviors.eventServer);
-		console.log(this);
+		
 		obj[signalName] = E.createScopeFunction(E.behaviors.eventServer.emit, { signal: signalName, object: obj });	
 		
 		if (!obj.listeners[signalName])
@@ -118,6 +185,11 @@ E = {
 	},
 	
 // document
+
+/**
+ * Додаєм файл таблиці стилей.
+ * @param {String} url - адреса файлу
+ */
 	appendStyleSheet: function(url) {
 		var styleLinkElement = document.createElement("LINK");
 		styleLinkElement.rel = "stylesheet";
@@ -178,7 +250,7 @@ E = {
 				if (500 <= this.request.status && "undefined" !== typeof(this.config.onError))
 					handler = this.config.onError;					
 					
-				handler.apply(this);	
+				handler.call(this);	
 			}	
 		};
 		
@@ -198,7 +270,7 @@ E = {
 				handler = this.config.onError;
 								
 			if (null != handler)
-				handler.call.apply(this); 					
+				handler.call(this); 					
 		};
 		var encoded_data = "";
 		
@@ -294,12 +366,27 @@ E = {
 	
 // i18n
 
-	t: function(dict, key) {
+/**
+ * Повертає локалізовану стрsxre по ключу key з словника dictionaryName. 
+ * 
+ * @param {String} dictionaryName - назва словника
+ * @param {String} key            - стрічка для локалізації
+ * 
+ * @return {String} локалізований варіант, якщо немає відповідного імені словника 
+ * чи варіант локалізації відсутній тоді повертаєтся key
+ * 
+ */
+	t: function(dictionaryName, key) {
 		//TODO
 		return key;
 	},
 	
-	appendDictionary: function(dict) {
+/**
+ * Додати новий словник перекладів
+ * @param {String} dictionaryName   - імя словника для доступу до нього
+ * @param {Object} dictionaryObject - обєкт з варіантами локалізацій де назва атрибута є ключом а значення варіантом
+ */	
+	appendDictionary: function(dictionaryName, dictionaryObject) {
 		//TODO
 	}
 };
