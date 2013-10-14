@@ -37,3 +37,25 @@
 .main-button .hover:HOVER {
 	opacity: 1;
 }
+
+.panel-clock {
+	margin: 5px;	
+	/* temp solution */
+	width: 54px;
+	height: 54px;
+	/* ... */ 
+}
+
+.panel-clock > div.widget-background {
+	background: url("img/clockBackground.png") no-repeat;
+}
+
+.panel-clock > div.minutes {
+	background: url("img/clockMinutes.png") no-repeat;
+}
+
+
+.panel-clock > div.hours {
+	background: url("img/clockHours.png") no-repeat;
+}
+

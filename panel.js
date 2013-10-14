@@ -24,12 +24,8 @@ E.wde.panel = {
 			
 			for(var controlName in this.controls) {
 				if (this.controls.hasOwnProperty(controlName)) {
-					var control = this.controls[controlName];
-					console.log(controlName, control);				
+					var control = this.controls[controlName];									
 					this.body.appendChild(control);
-					
-					if ("function" === typeof(control["init"]))
-						control.init();
 				}
 			}
 			
@@ -100,15 +96,71 @@ E.wde.panel = {
 				}
 			]
 		})),
-		appInspector: document.createElement('DIV').extend(E.behaviors.ui.widget.generate({
-			//TODO
-		})),
-		systemTray: document.createElement('DIV').extend(E.behaviors.ui.widget.generate({
-			//TODO
-		})),
-		clock: document.createElement('DIV').extend(E.behaviors.ui.widget.generate({
-			//TODO
-		})),
+		appInspector: document.createElement('DIV'),
+		systemTray: document.createElement('DIV'),
+		clock: E.elementFactory({
+			tag: 'div',
+			cls: 'panel-clock',
+			attributes: {
+				sizePolisy: "minimum"
+			}
+		}).extend(E.behaviors.ui.widget).mix({
+			constructors: [
+				function() {
+					this.minutesElement = E.elementFactory({
+						tag: 'div',
+						cls: 'minutes',
+						style: {
+							width: '100%',
+							height: '100%',
+							position: 'relative'
+						}
+					});
+					
+					this.hoursElement = E.elementFactory({
+						tag: 'div',
+						cls: 'hours',
+						style: {
+							width: '100%',
+							height: '100%',
+							position: 'relative',
+							marginTop: "-100%"
+						}
+					});
+					
+					this.appendChild(this.minutesElement);
+					this.appendChild(this.hoursElement);
+					
+					this.start();
+				}
+			],
+			timerId: null,
+			minutesElement: null,
+			hoursElement: null,
+			start: function() {				
+				if (null == this.timerId) {
+					this.timerId = setInterval(this.updateTimeView, 30000);
+					setTimeout(this.updateTimeView, 100);
+				} 				
+			},
+			stop: function() {
+				if (null != this.timerId) {
+					clearInterval(this.timerId);
+				}
+			},
+			updateTimeView: function() {
+				var clock = E.wde.panel.controls.clock;
+				var currentTime = new Date();
+				console.log(currentTime);
+				var minutes = currentTime.getMinutes();
+				var hours = currentTime.getHours();
+				clock.minutesElement.style.transform = "rotate(" + (minutes * 6) + "deg)";
+				clock.hoursElement.style.transform = "rotate(" + parseInt((minutes + (hours * 60)) * 0.25) + "deg)";
+			},
+			isStarted: function() {
+				return (null != this.timerId);
+			},			
+		}),
 	}
 };
 

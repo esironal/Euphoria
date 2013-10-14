@@ -46,7 +46,7 @@ Object.prototype.extend = function(value) {
 Object.prototype.mix = function(value) {
 	this.extend(value);	
 	if("undefined" !== typeof(this["constructors"]) && this["constructors"] instanceof Array) {
-		E.log(this);
+		//E.log(this);
 		for (var i = 0, l = this.constructors.length; i < l; i++) {
 			if ("function" === typeof(this.constructors[i]))
 				this.constructors[i].call(this);
