@@ -32,6 +32,9 @@ E.behaviors.ui = {
 						position: "absolute"
 					}
 				}));
+				
+				if(!this.style.position)
+					this.style.position = "relative";
 			}
 		],
 		setBackgroundOpacity: function(opacityValue) {

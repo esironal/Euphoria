@@ -103,6 +103,9 @@ E.wde.panel = {
 			cls: 'panel-clock',
 			attributes: {
 				sizePolisy: "minimum"
+			},
+			style: {
+				overflow: "hidden"
 			}
 		}).extend(E.behaviors.ui.widget).mix({
 			constructors: [
@@ -151,7 +154,6 @@ E.wde.panel = {
 			updateTimeView: function() {
 				var clock = E.wde.panel.controls.clock;
 				var currentTime = new Date();
-				console.log(currentTime);
 				var minutes = currentTime.getMinutes();
 				var hours = currentTime.getHours();
 				clock.minutesElement.style.transform = "rotate(" + (minutes * 6) + "deg)";
