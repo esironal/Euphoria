@@ -155,7 +155,7 @@ E.wde.panel = {
 				var minutes = currentTime.getMinutes();
 				var hours = currentTime.getHours();
 				clock.minutesElement.style.transform = "rotate(" + (minutes * 6) + "deg)";
-				clock.hoursElement.style.transform = "rotate(" + parseInt((minutes + (hours * 60)) * 0.25) + "deg)";
+				clock.hoursElement.style.transform = "rotate(" + parseInt((minutes + (hours * 60)) * 0.5) + "deg)";
 			},
 			isStarted: function() {
 				return (null != this.timerId);
